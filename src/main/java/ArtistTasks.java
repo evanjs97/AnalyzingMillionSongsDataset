@@ -4,8 +4,6 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.chain.ChainMapper;
-import org.apache.hadoop.mapreduce.lib.chain.ChainReducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -15,12 +13,12 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.TreeMap;
 
-public class Task2 {
+public class ArtistTasks {
 
 	private final String regex = ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))";
 
 	public static void createJob(Job job, String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
-		job.setJarByClass(Task2.class);
+		job.setJarByClass(ArtistTasks.class);
 		job.setCombinerClass(Task2Reducer.class);
 		job.setReducerClass(Task2Reducer.class);
 
@@ -45,7 +43,7 @@ public class Task2 {
 	public static void reduceArtistJob(Path input, Path output) throws IOException, ClassNotFoundException, InterruptedException{
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "job2");
-		job.setJarByClass(Task2.class);
+		job.setJarByClass(ArtistTasks.class);
 		job.setMapperClass(TaskArtistMapper.class);
 		job.setCombinerClass(TaskArtistReducer.class);
 		job.setReducerClass(TaskArtistReducer.class);
@@ -64,7 +62,7 @@ public class Task2 {
 	public static void reduceArtistTopNJob(Path input, Path output) throws IOException, ClassNotFoundException, InterruptedException{
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "job3");
-		job.setJarByClass(Task2.class);
+		job.setJarByClass(ArtistTasks.class);
 		job.setMapperClass(TaskArtistTopNMapper.class);
 		job.setReducerClass(TaskArtistTopNReducer.class);
 

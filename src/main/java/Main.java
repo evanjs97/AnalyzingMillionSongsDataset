@@ -7,8 +7,8 @@ import java.io.IOException;
 public class Main {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException{
-		if(args.length < 1) {
-			System.out.println("Must specify at least 1 argument");
+		if(args.length < 3) {
+			System.out.println("Must specify at least 3 arguments");
 			System.exit(1);
 		}
 
@@ -17,7 +17,7 @@ public class Main {
 
 		switch(args[0]) {
 			case "-1":
-				Task1.createJob(job, args[1], args[2]);
+				ArtistTasks.createJob(job, args[1], args[2], args[3]);
 				break;
 		}
 	}
