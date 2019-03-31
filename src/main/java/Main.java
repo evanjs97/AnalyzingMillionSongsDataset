@@ -34,7 +34,6 @@ public class Main {
 	}
 
 	public static void createJobOne(Job job, String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
-//		job.setJarByClass(ArtistTasks.class);
 		job.setJarByClass(Main.class);
 //		job.setCombinerClass(Task2Reducer.class);
 		job.setPartitionerClass(SixTaskParitioner.class);
@@ -51,14 +50,9 @@ public class Main {
 		MultipleInputs.addInputPath(job, new Path(metadata), TextInputFormat.class, SixTaskMetadataMapper.class);
 
 
-//		Path temp = new Path("/cs455/temp/task2/job1");
 		FileOutputFormat.setOutputPath(job, new Path(output));
 		job.setNumReduceTasks(6);
 		job.waitForCompletion(true);
 
-//		Path temp2 = new Path("/cs455/temp/task2/job2");
-//		reduceArtistJob(temp, temp2);
-//
-//		reduceArtistTopNJob(temp2, new Path(output));
 	}
 }
