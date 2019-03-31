@@ -21,23 +21,26 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			List<String> line = Util.readCSV(value.toString());
 			//song_id = line.get(8), artist_id = line.get(3), artist_name = line.get(7), song_title = line.get(9);
+			if(!line.get(8).equals("song_id")) {
+				//output key=Aartist_id value=artist_name TAB 1 (for answering question 1
+				if (!line.get(3).equals("") && !line.get(7).equals(""))
+					context.write(new Text("A" + line.get(3)), new Text(line.get(7).substring(2,line.get(7).length()-1) + "\t" + 1));
 
-			//output key=Aartist_id value=artist_name TAB 1 (for answering question 1
-			if(!line.get(3).equals("")) context.write(new Text("A" + line.get(3)), new Text(line.get(7) + "\t" + 1));
+				//output key=Bsong_id value=artist_name (for answering question 2 & 4)
+				if (!line.get(8).equals("") && !line.get(7).equals("")) {
+					String artist = line.get(7).substring(2,line.get(7).length()-1);
+					context.write(new Text("B" + line.get(8)), new Text("N" + artist));
+					context.write(new Text("D" + line.get(8)), new Text("N" + artist));
+				}
 
-			//output key=Bsong_id value=artist_name (for answering question 2 & 4)
-			if(!line.get(8).equals("")) {
-				context.write(new Text("B" + line.get(8)), new Text(line.get(7)));
-				context.write(new Text("D" + line.get(8)), new Text(line.get(7)));
+				//for answering question 3, 5 & 6
+				if (!line.get(9).equals("")) {
+					String song = line.get(9).substring(2,line.get(9).length()-1);
+					context.write(new Text("C" + line.get(8)), new Text("N" + song));
+					context.write(new Text("E" + line.get(8)), new Text("N"+song));
+					context.write(new Text("F" + line.get(8)), new Text("N"+song));
+				}
 			}
-
-			//for answering question 3, 5 & 6
-			if(!line.get(9).equals("")) {
-				context.write(new Text("C"), new Text(line.get(9)));
-				context.write(new Text("E"), new Text(line.get(9)));
-				context.write(new Text("F"), new Text(line.get(9)));
-			}
-
 		}
 
 }

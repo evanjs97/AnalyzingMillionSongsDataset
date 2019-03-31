@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
+
+	//taken from https://stackoverflow.com/questions/1757065/java-splitting-a-comma-separated-string-but-ignoring-commas-in-quotes
 	public static List<String> readCSV(String csv) {
 
 //		Reader input = new StringReader(csv);
