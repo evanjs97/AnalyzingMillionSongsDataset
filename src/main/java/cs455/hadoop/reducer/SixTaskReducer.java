@@ -206,7 +206,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 		}
 		if (!artist.equals("") && fadeDuration != 0) {
-			maxFade.put(fadeDuration, artist);
+			maxFade.put(fadeDuration / 60, artist);
 		}
 	}
 
@@ -222,7 +222,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 		}
 		if(!song.equals("") && length != 0) {
-			lengths.put(length, song);
+			lengths.put(length / 60, song);
 		}
 
 	}
