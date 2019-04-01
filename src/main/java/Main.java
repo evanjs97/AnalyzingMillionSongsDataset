@@ -4,6 +4,7 @@ import cs455.hadoop.partitioner.SixTaskParitioner;
 import cs455.hadoop.reducer.SixTaskReducer;
 import org.apache.hadoop.conf.Configuration;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -14,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.net.URI;
 
 public class Main {
 
@@ -33,7 +35,16 @@ public class Main {
 		}
 	}
 
+//	public static void deleteFolder(Path path) throws IOException{
+//		Configuration conf = new Configuration();
+//		conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+//		conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
+//		FileSystem hdfs = FileSystem.get(URI.create("hdfs://juneau:4922"), conf);
+//		hdfs.delete(path, true);
+//	}
+
 	public static void createJobOne(Job job, String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
+//		deleteFolder(new Path(output));
 		job.setJarByClass(Main.class);
 //		job.setCombinerClass(Task2Reducer.class);
 		job.setPartitionerClass(SixTaskParitioner.class);
