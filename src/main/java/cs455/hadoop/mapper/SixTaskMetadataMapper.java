@@ -36,7 +36,7 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 				//for answering question 3, 5 & 6
 				if (!line.get(9).equals("")) {
 					String song = line.get(9).substring(2,line.get(9).length()-1);
-					context.write(new Text("C" + line.get(8)), new Text("N" + song));
+					context.write(new Text("C" + line.get(8)), new Text("N"+song));
 					context.write(new Text("E" + line.get(8)), new Text("N"+song));
 					context.write(new Text("F" + line.get(8)), new Text("N"+song));
 				}

@@ -1,5 +1,6 @@
 package cs455.hadoop.reducer;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -8,21 +9,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
-//	private TreeMap<MapKey, String> maxCount = new TreeMap<>();
-//	private TreeMap<MapKey, String> maxAvgLoudness = new TreeMap<>();
-//	private TreeMap<MapKey, String> maxHotness = new TreeMap<>();
-//	private TreeMap<MapKey, String> maxFade = new TreeMap<>();
-//	private TreeMap<MapKey, String> lengths = new TreeMap<>();
-//	private TreeMap<MapKey, String> maxDance = new TreeMap<>();
 
 	private TreeMap<MapKey, String> maxes = new TreeMap<>();
 
 	private String outputHeader = "";
 	private char outputType = ' ';
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-//		for(Text text : values) {
-//			context.write(new Text(key.toString() + "\t" + text.toString()), NullWritable.get());
-//		}
 		String keyString = key.toString().substring(1);
 		switch (key.charAt(0)) {
 			case 'A':
@@ -53,7 +45,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			case 'F':
 				outputHeader = "Top 10 most energetic and Danceable Songs:\n";
 				outputType = 'F';
-				completeBasicTask(keyString,values, true);
+				completeTaskSix(keyString,values);
 				break;
 		}
 	}
@@ -97,7 +89,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 				return String.format("%s has a hotness score of %.2f.",hotEntry.getValue(), hotEntry.getKey().value);
 			case 'D':
 				Map.Entry<MapKey, String> fadeEntry = maxes.pollLastEntry();
-				return String.format("%s wrote songs with a total fade time of %.2f minutes",fadeEntry.getValue(), fadeEntry.getKey().value);
+				return String.format("%s wrote songs with a total fade time of %.2f minutes",fadeEntry.getValue(), fadeEntry.getKey().value / 60);
 
 			default:
 				Map.Entry<MapKey, String> danceEntry = maxes.pollLastEntry();
@@ -114,7 +106,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			Map.Entry<MapKey,String> entry;
 			if(maxes.size() < 3) entry = maxes.lastEntry();
 			else entry = maxes.pollLastEntry();
-			context.write(new Text(entry.getValue() + " has a runtime of " + entry.getKey().value + " minutes."), NullWritable.get());
+			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
 		}
 
 		context.write(new Text("\nThe top " + splits + " shortest songs are:"), NullWritable.get());
@@ -122,7 +114,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			Map.Entry<MapKey, String> entry;
 			if (maxes.size() < 2) entry = maxes.firstEntry();
 			else entry = maxes.pollFirstEntry();
-			context.write(new Text(entry.getValue() + " has a runtime of " + entry.getKey().value + " minutes."), NullWritable.get());
+			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
 		}
 
 		context.write(new Text("\nThe top " + splits + " median length songs are:"), NullWritable.get());
@@ -137,7 +129,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		while(iter.hasNext()) {
 			Map.Entry<MapKey, String> entry = iter.next();
 			if(currIndex >= start && currIndex <= end) {
-				context.write(new Text(entry.getValue() + " has a runtime of " + entry.getKey().value + " minutes."), NullWritable.get());
+				context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
 			}
 			currIndex++;
 		}
@@ -183,6 +175,23 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 		}
 		if(!artist.equals("") && loudness != 0) maxes.put(new MapKey(key,loudness / count, false), artist);
+	}
+
+	private void completeTaskSix(String key, Iterable<Text> values) {
+		String name = "";
+		double dance = 0;
+		double energy = 0;
+		for(Text val : values) {
+			String entry = val.toString();
+			if (entry.charAt(0) == 'N') {
+				name = entry.substring(1);
+			} else {
+				String[] arr = entry.split("\t");
+				dance = Double.parseDouble(arr[0]);
+				energy = Double.parseDouble(arr[1]);
+			}
+		}
+		if(!name.equals("") && (dance != 0 || energy != 0)) maxes.put(new MapKey(key, dance + energy, true), name);
 	}
 
 	private void completeBasicTask(String key, Iterable<Text> values, boolean increasing) {
