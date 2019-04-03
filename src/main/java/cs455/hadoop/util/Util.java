@@ -1,4 +1,4 @@
-package cs455.hadoop.mapper;
+package cs455.hadoop.util;
 
 import java.util.ArrayList;
 import java.util.List;

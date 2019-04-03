@@ -1,5 +1,6 @@
 package cs455.hadoop.mapper;
 
+import cs455.hadoop.util.Util;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -18,6 +19,7 @@ public class SixTaskAnalysisMapper extends Mapper<LongWritable, Text, Text, Text
 		if(!line.get(1).equals("song_id")) {
 			if (!line.get(1).equals("")) {
 				Double fadeDuration = calculateFade(line.get(6), line.get(13), line.get(5));
+//				Double fadeDuration = Double.parseDouble(line.get(6));
 				double loudness = -1;
 				try {
 					loudness = Double.parseDouble(line.get(10));
@@ -41,13 +43,37 @@ public class SixTaskAnalysisMapper extends Mapper<LongWritable, Text, Text, Text
 				//for answering question 6
 				if (!line.get(4).equals("") && !line.get(7).equals(""))
 					context.write(new Text("F" + line.get(1)), new Text(line.get(4) + "\t" + line.get(7)));
+
+
+
+				String val = createSegmentData(line.get(18).split(" "),lineTo2DArray(line.get(20),12),
+						lineTo2DArray(line.get(21),12), line.get(22).split(" "),line.get(23).split(" "), line.get(24).split(" "));
+//
+//				context.write(new Text("G"), new Text(val));
 			}
 		}
 	}
 
-//	private String createSegmentData(String[] starts, String[][] pitches, String[][] timbres, String[] maxLouds, String[] maxLoudTimes, String[] loudStarts) {
-//		return String.join("\t", starts) + ""
-//	}
+	private String[][] lineTo2DArray(String line, int numCols) {
+		String[] oneD = line.split(" ");
+		String[][] twoD = new String[oneD.length/numCols][numCols];
+		int index = 0;
+		for(int i = 0; i < oneD.length / numCols; i++) {
+			twoD[i] = Arrays.copyOfRange(oneD,index,numCols);
+			index+= numCols;
+		}
+		return twoD;
+	}
+
+	//idea for job 7 completion: sum the values from each set of segment data starting from both front and end and move towards center, this will preserve how the average
+	//song starts and ends which is likely important, keep track of how many songs there are for averaging
+	//also keep track of average number of segments in songs and use that many segments for creating segment for average song
+	//once again iterating from front and back at same time for averages
+
+	private String createSegmentData(String[] starts, String[][] pitches, String[][] timbres, String[] maxLouds, String[] maxLoudTimes, String[] loudStarts) {
+		//return String.join("\t", starts) + ""
+		return "";
+	}
 
 	private Double calculateFade(String endFadeIn, String startFadeOut, String duration) {
 		try {

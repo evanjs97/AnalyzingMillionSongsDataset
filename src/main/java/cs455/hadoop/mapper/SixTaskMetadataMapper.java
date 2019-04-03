@@ -1,5 +1,6 @@
 package cs455.hadoop.mapper;
 
+import cs455.hadoop.util.Util;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -29,8 +30,8 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 				//output key=Bsong_id value=artist_name (for answering question 2 & 4)
 				if (!line.get(8).equals("") && !line.get(7).equals("")) {
 					String artist = line.get(7).substring(2,line.get(7).length()-1);
-					context.write(new Text("B" + line.get(8)), new Text("N" + artist));
-					context.write(new Text("D" + line.get(8)), new Text("N" + artist));
+					context.write(new Text("B" + line.get(8)), new Text("N" + line.get(3) + "\t" + artist));
+					context.write(new Text("D" + line.get(8)), new Text("N" + line.get(3) + "\t" + artist));
 				}
 
 				//for answering question 3, 5 & 6

@@ -8,7 +8,12 @@ import java.io.IOException;
 
 public class SixTaskCombiner  extends Reducer<Text, Text, Text, NullWritable> {
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+		String keyString = key.toString();
+//		LinkedList<String>
+		switch (keyString.charAt(0)) {
+			case 'G':
 
+		}
 	}
 
 }
