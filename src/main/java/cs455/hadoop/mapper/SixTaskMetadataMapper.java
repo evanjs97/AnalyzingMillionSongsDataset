@@ -22,16 +22,30 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			List<String> line = Util.readCSV(value.toString());
 			//song_id = line.get(8), artist_id = line.get(3), artist_name = line.get(7), song_title = line.get(9);
+			//similar_artists = line.get(10)
 			if(!line.get(8).equals("song_id")) {
 				//output key=Aartist_id value=artist_name TAB 1 (for answering question 1
-				if (!line.get(3).equals("") && !line.get(7).equals(""))
-					context.write(new Text("A" + line.get(3)), new Text(line.get(7).substring(2,line.get(7).length()-1) + "\t" + 1));
+				if (!line.get(3).equals("") && !line.get(7).equals("")) {
+					context.write(new Text("A" + line.get(3)), new Text("N" + line.get(7).substring(2, line.get(7).length() - 1) + "\t" + 1));
+
+				}
 
 				//output key=Bsong_id value=artist_name (for answering question 2 & 4)
 				if (!line.get(8).equals("") && !line.get(7).equals("")) {
 					String artist = line.get(7).substring(2,line.get(7).length()-1);
 					context.write(new Text("B" + line.get(8)), new Text("N" + line.get(3) + "\t" + artist));
 					context.write(new Text("D" + line.get(8)), new Text("N" + line.get(3) + "\t" + artist));
+
+					//for completing job 8, get list of similar artists and output all ids for combining later
+					if(!line.get(10).equals("")) {
+						context.write(new Text("G" + line.get(3)), new Text("N"+artist+"\t"+"0"));
+						String[] others = line.get(10).split(" ");
+						for(String id : others) {
+							if(!id.equals(" ")) {
+								context.write(new Text("G"+ id), new Text("E\t1"));
+							}
+						}
+					}
 				}
 
 				//for answering question 3, 5 & 6
@@ -41,6 +55,7 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 					context.write(new Text("E" + line.get(8)), new Text("N"+song));
 					context.write(new Text("F" + line.get(8)), new Text("N"+song));
 				}
+
 			}
 		}
 

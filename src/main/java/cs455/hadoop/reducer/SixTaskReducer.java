@@ -21,7 +21,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			case 'A':
 				outputHeader = "Top 10 artists with the most songs:\n";
 				outputType = 'A';
-				completeTaskOne(keyString,values);
+				completeSumTasks(keyString,values);
 				break;
 			case 'B':
 				outputHeader = "Top 10 artists with the loudest songs on average:\n";
@@ -48,6 +48,10 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 				outputType = 'F';
 				completeTaskSix(keyString,values);
 				break;
+			case 'G':
+				outputHeader = "Most Generic and Most Unique Artists:\n";
+				outputType = 'G';
+				completeSumTasks(keyString,values);
 		}
 	}
 
@@ -109,7 +113,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 				Map.Entry<MapKey, String> fadeEntry = maxes.pollLastEntry();
 				String[] arr2 = fadeEntry.getValue().split("\t");
 				return String.format("%s wrote songs with a total fade time of %.2f minutes",arr2[1], fadeEntry.getKey().value / 60);
-
+			case 'G':
+				Map.Entry<MapKey, String> generic = maxes.pollLastEntry();
+				Map.Entry<MapKey, String> unique = maxes.pollFirstEntry();
+				String uniqueS = String.format("The most unique artist is %s who is only similar with %.0f other artists", unique.getValue(), unique.getKey().value);
+				String genericS = String.format("The most generic artist is %s who is similar with %.0f other artists", generic.getValue(), generic.getKey().value);
+				return uniqueS + "\n" + genericS;
 			default:
 				Map.Entry<MapKey, String> danceEntry = maxes.pollLastEntry();
 				return String.format("%s has a combined danceability and energy score of %.2f", danceEntry.getValue(), danceEntry.getKey().value);
@@ -158,6 +167,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	protected void cleanup(Context context) throws IOException, InterruptedException {
 		context.write(new Text(outputHeader), NullWritable.get());
 		if(outputType == 'E' && !maxes.isEmpty()) outputLengths(context);
+		else if(outputType == 'G' && !maxes.isEmpty()) context.write(new Text(getOutputValue()), NullWritable.get());
 		else {
 			for (int i = 0; i < Math.min(10, maxes.size()); i++) {
 				context.write(new Text(getOutputValue()), NullWritable.get());
@@ -166,7 +176,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	}
 
 
-	private void completeTaskOne(String key, Iterable<Text> values) {
+	private void completeSumTasks(String key, Iterable<Text> values) {
 		int sum = 0;
 		String artist = "";
 		for(Text value : values) {

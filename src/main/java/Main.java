@@ -1,3 +1,4 @@
+import cs455.hadoop.combiner.SixTaskCombiner;
 import cs455.hadoop.combiner.TaskSevenCombiner;
 import cs455.hadoop.reducer.TaskSevenReducer;
 import cs455.hadoop.mapper.SixTaskAnalysisMapper;
@@ -72,7 +73,7 @@ public class Main {
 	public static void createJobOne(Job job, String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
 //		deleteFolder(new Path(output));
 		job.setJarByClass(Main.class);
-//		job.setCombinerClass(Task2Reducer.class);
+		job.setCombinerClass(SixTaskCombiner.class);
 		job.setPartitionerClass(SixTaskParitioner.class);
 		job.setReducerClass(SixTaskReducer.class);
 
@@ -88,7 +89,7 @@ public class Main {
 
 
 		FileOutputFormat.setOutputPath(job, new Path(output));
-		job.setNumReduceTasks(6);
+		job.setNumReduceTasks(7);
 		job.waitForCompletion(true);
 
 	}

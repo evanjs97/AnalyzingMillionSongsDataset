@@ -7,7 +7,7 @@ public class SixTaskParitioner extends Partitioner<Text, Text> {
 
 	@Override
 	public int getPartition(Text key, Text value, int numReduceTasks) {
-		if(numReduceTasks != 6) return key.hashCode() % numReduceTasks;
+		if(numReduceTasks != 7) return key.hashCode() % numReduceTasks;
 		else {
 			String str = key.toString();
 			switch (str.charAt(0)) {
@@ -21,8 +21,10 @@ public class SixTaskParitioner extends Partitioner<Text, Text> {
 					return 3;
 				case 'E':
 					return 4;
-				default:
+				case 'F':
 					return 5;
+				default:
+					return 6;
 			}
 		}
 	}
