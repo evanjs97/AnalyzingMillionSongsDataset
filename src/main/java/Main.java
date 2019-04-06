@@ -1,10 +1,13 @@
+import cs455.hadoop.combiner.TaskSevenCombiner;
+import cs455.hadoop.reducer.TaskSevenReducer;
 import cs455.hadoop.mapper.SixTaskAnalysisMapper;
 import cs455.hadoop.mapper.SixTaskMetadataMapper;
+import cs455.hadoop.mapper.TaskSevenMapper;
 import cs455.hadoop.partitioner.SixTaskParitioner;
 import cs455.hadoop.reducer.SixTaskReducer;
+import cs455.hadoop.util.SongSegment;
 import org.apache.hadoop.conf.Configuration;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -15,7 +18,6 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.net.URI;
 
 public class Main {
 
@@ -32,7 +34,31 @@ public class Main {
 			case "-1":
 				createJobOne(job, args[1], args[2], args[3]);
 				break;
+			case "-7":
+				createJobSeven(job, args[1], args[2]);
+				break;
 		}
+	}
+
+	public static void createJobSeven(Job job, String analysis, String output) throws IOException, ClassNotFoundException, InterruptedException{
+		job.setJarByClass(Main.class);
+		job.setCombinerClass(TaskSevenCombiner.class);
+		job.setReducerClass(TaskSevenReducer.class);
+		job.setMapperClass(TaskSevenMapper.class);
+
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setMapOutputKeyClass(NullWritable.class);
+		job.setMapOutputValueClass(SongSegment.class);
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(Text.class);
+
+		FileInputFormat.addInputPath(job, new Path(analysis));
+		FileOutputFormat.setOutputPath(job, new Path(output));
+		FileInputFormat.setInputDirRecursive(job, true);
+
+		job.setNumReduceTasks(1);
+		job.waitForCompletion(true);
+
 	}
 
 //	public static void deleteFolder(Path path) throws IOException{

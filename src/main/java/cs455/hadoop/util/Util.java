@@ -1,6 +1,9 @@
 package cs455.hadoop.util;
 
+import org.apache.hadoop.io.DoubleWritable;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Util {
@@ -24,5 +27,20 @@ public class Util {
 			}
 		}
 		return result;
+	}
+
+	public static AvgDouble[] lineTo1DAvgDoubleArr(String line) {
+		return Arrays.stream(line.split(" ")).map(x -> new AvgDouble(Double.parseDouble(x))).toArray(AvgDouble[]	::new);
+	}
+
+	public static AvgDouble[][] lineTo2DAvgDoubleArr(String line, int numCols) {
+		AvgDouble[] oneD = Arrays.stream(line.split(" ")).map(x -> new AvgDouble(Double.parseDouble(x))).toArray(AvgDouble[]::new);
+		AvgDouble[][] twoD = new AvgDouble[oneD.length/numCols][numCols];
+		int index = 0;
+		for(int i = 0; i < twoD.length; i++) {
+			twoD[i] = Arrays.copyOfRange(oneD, index, index+numCols);
+			index += numCols;
+		}
+		return twoD;
 	}
 }
