@@ -3,8 +3,15 @@ package cs455.hadoop.partitioner;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Partitioner;
 
-public class SixTaskParitioner extends Partitioner<Text, Text> {
+public class SixTaskPartitioner extends Partitioner<Text, Text> {
 
+	/**
+	 * Partitioner to send each task to a different reducer, then each reducer is able to create top N lists for its task
+	 * @param key the key of the pair
+	 * @param value the value of the pair
+	 * @param numReduceTasks the number of reduce tasks
+	 * @return reducer to send data to
+	 */
 	@Override
 	public int getPartition(Text key, Text value, int numReduceTasks) {
 		if(numReduceTasks != 7) return key.hashCode() % numReduceTasks;

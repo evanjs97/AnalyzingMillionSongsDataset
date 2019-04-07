@@ -15,6 +15,16 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 
 	private String outputHeader = "";
 	private char outputType = ' ';
+
+	/**
+	 * Reduce method sends input to correct method based on the first char of its key
+	 * Also sets type and header to be used in output for this reducer instance
+	 * @param key of the entry
+	 * @param values in the entry
+	 * @param context to write to
+	 * @throws IOException if write issues
+	 * @throws InterruptedException if write issues
+	 */
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		String keyString = key.toString().substring(1);
 		switch (key.charAt(0)) {
@@ -55,18 +65,32 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 	}
 
+	/**
+	 * MapKey object to be used by the map implemented in the reducer
+	 * Note: increasing is true for all tasks, however functionality is there to sort by max->min instead of min->max
+	 */
 	class MapKey implements Comparable<MapKey>{
-		protected double value;
-		protected String key;
-		protected boolean increasing;
+		double value;
+		String key;
+		boolean increasing;
 
-
+		/**
+		 *
+		 * @param key = key for this keypair
+		 * @param value for this keypair
+		 * @param increasing if true: sort from min->max else: sort from max->min
+		 */
 		public MapKey(String key, double value, boolean increasing) {
 			this.value = value;
 			this.key = key;
 			this.increasing = increasing;
 		}
 
+		/**
+		 * return correct ordering for MapKey object
+		 * @param o the object to compare to
+		 * @return the correct ordering
+		 */
 		@Override
 		public int compareTo(MapKey o) {
 			if(this.key.equals(o.key) || this.value == o.value) return 0;
@@ -79,6 +103,11 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 		}
 
+		/**
+		 * returns true if MapKey's key.equals(o's key)
+		 * @param o the MapKey to compare with this one
+		 * @return true if equal, else false
+		 */
 		@Override
 		public boolean equals(Object o) {
 			if(o.equals(this)) return true;
@@ -95,6 +124,10 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 	}
 
+	/**
+	 * get value for output type of reducer instance
+	 * @return the value to output / write to file
+	 */
 	private String getOutputValue() {
 
 		switch (outputType) {
@@ -125,6 +158,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 	}
 
+	/**
+	 * Method for formatting output for the longest, shortest and median length songs (max 5 of each)
+	 * @param context to write to
+	 * @throws IOException if write issues
+	 * @throws InterruptedException if write issues
+	 */
 	private void outputLengths(Context context) throws IOException, InterruptedException{
 		int splits = Math.max(Math.min(maxes.size() / 3,5),1);
 		if(splits % 2 == 0) splits --;
@@ -164,6 +203,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 
 	}
 
+	/**
+	 * output data using output type of current reducer instance
+	 * @param context what to write to
+	 * @throws IOException if context write issues
+	 * @throws InterruptedException if context write issues
+	 */
 	protected void cleanup(Context context) throws IOException, InterruptedException {
 		context.write(new Text(outputHeader), NullWritable.get());
 		if(outputType == 'E' && !maxes.isEmpty()) outputLengths(context);
@@ -175,7 +220,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 	}
 
-
+	/**
+	 * Reducer method for completing task 1: find the top 10 artists with most songs
+	 * and task 8: find the most generic and most unique artists
+	 * @param key the key of the pair
+	 * @param values the list of values
+	 */
 	private void completeSumTasks(String key, Iterable<Text> values) {
 		int sum = 0;
 		String artist = "";
@@ -190,7 +240,11 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	}
 
 
-///fix this fuinction
+	/**
+	 * Reducer method for completing task 2: find artist with loudest songs on average
+	 * @param key the key of the pair
+	 * @param values the list of values
+	 */
 	private void completeTaskTwo(String key, Iterable<Text> values) {
 		String artist = "";
 		String artistID = "";
@@ -207,19 +261,14 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 
 		if(!artist.equals("")) {
-			//MapKey replace = new MapKey(artistID, 0,true);
 			double oldVal = 0;
 			if(valueAgg.containsKey(artistID)) oldVal = valueAgg.get(artistID);
 			MapKey replace = new MapKey(artistID, oldVal, true);
-			//if(value.equals("")) value = "0.0\t0\t"+artist;
-			//String value = maxes.getOrDefault(replace, "0.0\t0\t"+artist);
 			int oldCount = 0;
 			if(maxes.containsKey(replace)) {
 				String[] arr = maxes.remove(replace).split("\t");
 				oldCount = Integer.parseInt(arr[1]);
 			}
-			//String[] arr = value.split("\t");
-			//int oldCount = Integer.parseInt(arr[1]);
 			double newVal = (oldVal * oldCount) + loudness;
 			int newCount = oldCount +1;
 			replace.value = newVal / newCount;
@@ -228,6 +277,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 	}
 
+	/**
+	 * Reducer method for completing task 6: find the songs with the best danceability score (dance + energy)
+	 * Note that the million song dataset does not actually contain any data for these values so this job will print nothing
+	 * @param key the key of the pair
+	 * @param values the list of values
+	 */
 	private void completeTaskSix(String key, Iterable<Text> values) {
 		String name = "";
 		double dance = 0;
@@ -245,6 +300,11 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		if(!name.equals("") && (dance != 0 || energy != 0)) maxes.put(new MapKey(key, dance + energy, true), name);
 	}
 
+	/**
+	 * Reducer method for completing task 4: find artist with longest total fade time
+	 * @param key the key of the pair
+	 * @param values the list of values
+	 */
 	private void completeTaskFour(String key, Iterable<Text> values) {
 		String artist = "";
 		String artistID = "";
@@ -261,21 +321,20 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		}
 		if(!artist.equals("") && fade > 0) {
 			double oldFade = 0;
-                        if(valueAgg.containsKey(artistID)) oldFade = valueAgg.get(artistID);
-                        MapKey replace = new MapKey(artistID, oldFade, true);
-
-			//MapKey replace = new MapKey(artistID, 0, true);
-			//String value = "";
+			if(valueAgg.containsKey(artistID)) oldFade = valueAgg.get(artistID);
+			MapKey replace = new MapKey(artistID, oldFade, true);
 			if(maxes.containsKey(replace)) maxes.remove(replace);
-			//if(value.equals("")) value = "0.0\t"+artist;
-			//String[] arr = value.split("\t");
-			//double oldFade = Double.parseDouble(arr[0]);
 			replace.value = oldFade + fade;
 			maxes.put(replace, replace.value + "\t" + artist);
 		}
 
 	}
 
+	/**
+	 * Reducer method for completing task 4: find artist with longest total fade time
+	 * @param key the key of the pair
+	 * @param values the list of values
+	 */
 	private void completeBasicTask(String key, Iterable<Text> values, boolean increasing) {
 		String name = "";
 		double value = 0;
