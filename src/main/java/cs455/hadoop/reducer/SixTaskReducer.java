@@ -1,5 +1,8 @@
 package cs455.hadoop.reducer;
 
+import cs455.hadoop.util.AvgDouble;
+import cs455.hadoop.util.MapKey;
+import cs455.hadoop.util.Util;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -62,6 +65,12 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 				outputHeader = "Most Generic and Most Unique Artists:\n";
 				outputType = 'G';
 				completeSumTasks(keyString,values);
+				break;
+			case 'H':
+				outputHeader = "Values that will make a song a high hotness song (i.e 1.0) are:";
+				outputType = 'H';
+				hotnessTask(values,context);
+				break;
 		}
 	}
 
@@ -69,60 +78,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	 * MapKey object to be used by the map implemented in the reducer
 	 * Note: increasing is true for all tasks, however functionality is there to sort by max->min instead of min->max
 	 */
-	class MapKey implements Comparable<MapKey>{
-		double value;
-		String key;
-		boolean increasing;
 
-		/**
-		 *
-		 * @param key = key for this keypair
-		 * @param value for this keypair
-		 * @param increasing if true: sort from min->max else: sort from max->min
-		 */
-		public MapKey(String key, double value, boolean increasing) {
-			this.value = value;
-			this.key = key;
-			this.increasing = increasing;
-		}
-
-		/**
-		 * return correct ordering for MapKey object
-		 * @param o the object to compare to
-		 * @return the correct ordering
-		 */
-		@Override
-		public int compareTo(MapKey o) {
-			if(this.key.equals(o.key) || this.value == o.value) return 0;
-			else if(increasing) {
-				if(this.value < o.value) return -1;
-				else return 1;
-			}else {
-				if(this.value > o.value) return -1;
-				else return 1;
-			}
-		}
-
-		/**
-		 * returns true if MapKey's key.equals(o's key)
-		 * @param o the MapKey to compare with this one
-		 * @return true if equal, else false
-		 */
-		@Override
-		public boolean equals(Object o) {
-			if(o.equals(this)) return true;
-			else if(!(o instanceof MapKey)) return false;
-			else {
-				MapKey other = (MapKey) o;
-				return other.key.equals(this.key);
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return key.hashCode();
-		}
-	}
 
 	/**
 	 * get value for output type of reducer instance
@@ -133,7 +89,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		switch (outputType) {
 			case 'A':
 				Map.Entry<MapKey, String> countEntry = maxes.pollLastEntry();
-				return String.format("%s wrote %.0f songs",countEntry.getValue(), countEntry.getKey().value);
+				return String.format("%s wrote %.0f songs",countEntry.getValue(), countEntry.getKey().getValue());
 			case 'B':
 				Map.Entry<MapKey,String> loudEntry = maxes.pollLastEntry();
 				String[] arr = loudEntry.getValue().split("\t");
@@ -141,20 +97,20 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 				return String.format("%s: wrote songs with an average loudness of %.2f decibals", arr[2], loudness);
 			case 'C':
 				Map.Entry<MapKey, String> hotEntry = maxes.pollLastEntry();
-				return String.format("%s has a hotness score of %.2f.",hotEntry.getValue(), hotEntry.getKey().value);
+				return String.format("%s has a hotness score of %.2f.",hotEntry.getValue(), hotEntry.getKey().getValue());
 			case 'D':
 				Map.Entry<MapKey, String> fadeEntry = maxes.pollLastEntry();
 				String[] arr2 = fadeEntry.getValue().split("\t");
-				return String.format("%s wrote songs with a total fade time of %.2f minutes",arr2[1], fadeEntry.getKey().value / 60);
+				return String.format("%s wrote songs with a total fade time of %.2f minutes",arr2[1], fadeEntry.getKey().getValue() / 60);
 			case 'G':
 				Map.Entry<MapKey, String> generic = maxes.pollLastEntry();
 				Map.Entry<MapKey, String> unique = maxes.pollFirstEntry();
-				String uniqueS = String.format("The most unique artist is %s who is only similar with %.0f other artists", unique.getValue(), unique.getKey().value);
-				String genericS = String.format("The most generic artist is %s who is similar with %.0f other artists", generic.getValue(), generic.getKey().value);
+				String uniqueS = String.format("The most unique artist is %s who is only similar with %.0f other artists", unique.getValue(), unique.getKey().getValue());
+				String genericS = String.format("The most generic artist is %s who is similar with %.0f other artists", generic.getValue(), generic.getKey().getValue());
 				return uniqueS + "\n" + genericS;
 			default:
 				Map.Entry<MapKey, String> danceEntry = maxes.pollLastEntry();
-				return String.format("%s has a combined danceability and energy score of %.2f", danceEntry.getValue(), danceEntry.getKey().value);
+				return String.format("%s has a combined danceability and energy score of %.2f", danceEntry.getValue(), danceEntry.getKey().getValue());
 		}
 	}
 
@@ -173,7 +129,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			Map.Entry<MapKey,String> entry;
 			if(maxes.size() < 3) entry = maxes.lastEntry();
 			else entry = maxes.pollLastEntry();
-			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
+			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().getValue() / 60)), NullWritable.get());
 		}
 
 		context.write(new Text("\nThe top " + splits + " shortest songs are:"), NullWritable.get());
@@ -181,7 +137,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			Map.Entry<MapKey, String> entry;
 			if (maxes.size() < 2) entry = maxes.firstEntry();
 			else entry = maxes.pollFirstEntry();
-			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
+			context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().getValue() / 60)), NullWritable.get());
 		}
 
 		context.write(new Text("\nThe top " + splits + " median length songs are:"), NullWritable.get());
@@ -196,7 +152,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		while(iter.hasNext()) {
 			Map.Entry<MapKey, String> entry = iter.next();
 			if(currIndex >= start && currIndex <= end) {
-				context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().value / 60)), NullWritable.get());
+				context.write(new Text(String.format("%s has a runtime of %.2f minutes.",entry.getValue(), entry.getKey().getValue() / 60)), NullWritable.get());
 			}
 			currIndex++;
 		}
@@ -210,6 +166,7 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	 * @throws InterruptedException if context write issues
 	 */
 	protected void cleanup(Context context) throws IOException, InterruptedException {
+		if(outputType == 'H') return;
 		context.write(new Text(outputHeader), NullWritable.get());
 		if(outputType == 'E' && !maxes.isEmpty()) outputLengths(context);
 		else if(outputType == 'G' && !maxes.isEmpty()) context.write(new Text(getOutputValue()), NullWritable.get());
@@ -271,9 +228,9 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 			double newVal = (oldVal * oldCount) + loudness;
 			int newCount = oldCount +1;
-			replace.value = newVal / newCount;
-			valueAgg.put(artistID, replace.value);
-			maxes.put(replace, replace.value + "\t" + newCount + "\t" + artist);
+			replace.setValue(newVal / newCount);
+			valueAgg.put(artistID, replace.getValue());
+			maxes.put(replace, replace.getValue() + "\t" + newCount + "\t" + artist);
 		}
 	}
 
@@ -324,8 +281,8 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			if(valueAgg.containsKey(artistID)) oldFade = valueAgg.get(artistID);
 			MapKey replace = new MapKey(artistID, oldFade, true);
 			if(maxes.containsKey(replace)) maxes.remove(replace);
-			replace.value = oldFade + fade;
-			maxes.put(replace, replace.value + "\t" + artist);
+			replace.setValue(oldFade + fade);
+			maxes.put(replace, replace.getValue() + "\t" + artist);
 		}
 
 	}
@@ -345,5 +302,78 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			} else value = Double.parseDouble(entry.substring(1));
 		}
 		if(!name.equals("") && value != 0) maxes.put(new MapKey(key, value, increasing), name);
+	}
+
+	private void hotnessTask(Iterable<Text> values, Context context) throws IOException, InterruptedException {
+		AvgDouble duration = new AvgDouble();
+		AvgDouble loudness = new AvgDouble();
+		AvgDouble tempo = new AvgDouble();
+		AvgDouble fadeIn = new AvgDouble();
+		AvgDouble fadeOut = new AvgDouble();
+		LinkedList<String> keys = new LinkedList<>();
+		LinkedList<String> modes = new LinkedList<>();
+		LinkedList<String> timeSigs = new LinkedList<>();
+
+		LinkedList<String> keywords = new LinkedList<>();
+		for(Text val : values) {
+			String entry = val.toString();
+			if (entry.charAt(0) == 'N') {
+				keywords.addAll(Arrays.asList(entry.substring(1).split(" ")));
+			} else {
+				String[] arr = entry.substring(1).split("\t");
+				String[] durArr = arr[0].split(" ");
+				double temp = Util.DoubleOrZero(durArr[0]);
+				if (temp != 0) {
+					if (durArr.length == 2) {
+						duration.add(temp, Integer.parseInt(durArr[1]));
+					} else duration.add(temp);
+				}
+
+				String[] inArr = arr[1].split(" ");
+				temp = Util.DoubleOrZero(inArr[0]);
+				if (temp != 0) {
+					if (inArr.length == 2) {
+						fadeIn.add(temp, Integer.parseInt(durArr[1]));
+					} else fadeIn.add(temp);
+				}
+
+				String[] loudArr = arr[3].split(" ");
+				temp = Util.DoubleOrZero(arr[3]);
+				if (temp != 0) {
+					if (loudArr.length == 2) {
+						loudness.add(temp, Integer.parseInt(loudArr[1]));
+					} else loudness.add(temp);
+				}
+
+				String[] outArr = arr[5].split(" ");
+				temp = Util.DoubleOrZero(arr[5]);
+				if (temp != 0) {
+					if (outArr.length == 2) {
+						loudness.add(temp, Integer.parseInt(outArr[1]));
+					} else loudness.add(temp);
+				}
+
+				String[] tempoArr = arr[6].split(" ");
+				temp = Util.DoubleOrZero(arr[6]);
+				if (temp != 0) {
+					if (tempoArr.length == 2) {
+						tempo.add(temp, Integer.parseInt(tempoArr[1]));
+					} else tempo.add(temp);
+				}
+
+
+				keys.addAll(Arrays.asList(arr[2].split(" ")));
+				modes.addAll(Arrays.asList(arr[4].split(" ")));
+				timeSigs.addAll(Arrays.asList(arr[7].split(" ")));
+			}
+		}
+		context.write(new Text("\n" + outputHeader + "\n"), NullWritable.get());
+
+		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + Util.mostCommonStringInList(keywords,10)), NullWritable.get());
+		context.write(new Text("Song Name: \"Mr. Popular\"\tSong Duration: " + duration.toAvgString() + "\tFade In Duration: " + fadeIn.toAvgString() + "\tKey: "
+				+ Util.mostCommonStringInList(keys) + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + Util.mostCommonStringInList(modes)
+				+ "\tFade Out Duration: " + fadeOut.toAvgString() + "\tTempo: " + tempo.toAvgString()
+				+ "\tTime Signature: " + Util.mostCommonStringInList(timeSigs)), NullWritable.get());
+
 	}
 }

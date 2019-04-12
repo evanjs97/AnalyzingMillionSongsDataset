@@ -82,7 +82,7 @@ public class Main {
 
 
 		FileOutputFormat.setOutputPath(job, new Path(output));
-		job.setNumReduceTasks(7);
+		job.setNumReduceTasks(8);
 		job.waitForCompletion(true);
 
 	}

@@ -1,7 +1,6 @@
 package cs455.hadoop.util;
 
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -28,14 +27,26 @@ public class AvgDouble implements Writable{
 		count += other.count;
 	}
 
+	public void add(double other) {
+		sum.set(other + getSum());
+		count++;
+	}
+
+	public void add(double other, int otherCount) {
+		sum.set(other + getSum());
+		count += otherCount;
+	}
+
 	public String toAvgString() {
+		if(count == 0) count = 1;
 		return ""+(getSum() / count);
 	}
+
+	public String preserveCountString() { return getSum() + " " + count; }
 
 	@Override
 	public void write(DataOutput dataOutput) throws IOException {
 		if(count == 0) count = 1;
-		//if(sum == null) sum = new DoubleWritable();
 		sum.set(getSum() / count);
 		sum.write(dataOutput);
 	}
@@ -121,7 +132,4 @@ public class AvgDouble implements Writable{
 		}
 	}
 
-//	public static AvgDouble parseAvgDouble(String s) {
-//		return new AvgDouble(Double.parseDouble(s));
-//	}
 }

@@ -46,17 +46,20 @@ public class SixTaskAnalysisMapper extends Mapper<LongWritable, Text, Text, Text
 				if (!line.get(4).equals("") && !line.get(7).equals(""))
 					context.write(new Text("F" + line.get(1)), new Text(line.get(4) + "\t" + line.get(7)));
 
+				//for popularity:
+				// song traits: duration(5), key(8), loudness(10), mode(11), tempo(14), time_signature(15), danceability(4), energy(7)
+				// fade_in(6), fade_out(13)
+				// artist traits: terms(11) space separated
 
-//				if(!line.get(18).equals("") && !line.get(20).equals("") && !line.get(21).equals("") && !line.get(22).equals("") &&
-//						!line.get(23).equals("") && !line.get(24).equals("")) {
-//					context.write(new Text("G"), new Text(line.get(18) + "\t" + line.get(20) + "\t" +
-//							line.get(21) + "\t" + line.get(22) + "\t" + line.get(23) + "\t" + line.get(24) + "\t"));
-//				}
-//				SongSegment segment = createSegmentData(Util.lineTo1DDoubleWritableArr(line.get(18)),Util.lineTo2DDoubleWritableArr(line.get(20),12),
-//						Util.lineTo2DDoubleWritableArr(line.get(21),12),Util.lineTo1DDoubleWritableArr(line.get(22)),
-//						Util.lineTo1DDoubleWritableArr(line.get(23)), Util.lineTo1DDoubleWritableArr(line.get(24)));
-//
-//				context.write(new Text("G"), new Text(val));
+				//Question 9 approach:
+				//from all songs with popularity score of 1.0
+				//average duration, most common key, average loudness, most common mode, average tempo, most common time_signature
+				//ignore dance and energy, average fade_in time, average fade_out time
+				//output order duration, fade_in, key, loudness, mode, fade_out, tempo, time_signature
+				if(!line.get(2).isEmpty() && Double.parseDouble(line.get(2)) > .9)
+					context.write(new Text("H"), new Text("M"+line.get(5)+"\t"+line.get(6)+"\t"
+						+line.get(8)+"\t"+line.get(10)+"\t"+line.get(11)+"\t"+line.get(13)+"\t"+line.get(14)+"\t"+line.get(15)));
+
 			}
 		}
 	}
