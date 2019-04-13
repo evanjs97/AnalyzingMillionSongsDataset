@@ -4,6 +4,7 @@ import cs455.hadoop.util.AvgDouble;
 import cs455.hadoop.util.MapKey;
 import cs455.hadoop.util.TreeFormatter;
 import cs455.hadoop.util.Util;
+import cs455.hadoop.util.pair.TwoPairStringInt;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -195,16 +196,20 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	 * @param values the list of values
 	 */
 	private void completeSumTasks(String key, Iterable<Text> values) {
-		int sum = 0;
-		String artist = "";
+//		int sum = 0;
+//		String artist = "";
+		TwoPairStringInt artistSum = null;
 		for(Text value : values) {
-			String entry = value.toString();
-			String[] arr = entry.split("\t");
-			artist = arr[0];
-			sum += Integer.parseInt(arr[1]);
+			if(artistSum == null) artistSum = new TwoPairStringInt(value);
+			else artistSum.add(Integer.parseInt(value.toString().split("\t")[1]));
+//			String entry = value.toString();
+//			String[] arr = entry.split("\t");
+//			artist = arr[0];
+//			sum += Integer.parseInt(arr[1]);
 		}
 
-		if(!artist.equals("")) maxes.put(new MapKey(key, sum, true),artist);
+		if(artistSum != null && !artistSum.getStr().isEmpty())
+			maxes.put(new MapKey(key, artistSum.getVal(), true),artistSum.getStr());
 	}
 
 
@@ -357,14 +362,6 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 			}
 		}
 		if(hotArtist && tempKeywords != null) keywords.addAll(tempKeywords," ");
-//		context.write(new Text("\n" + outputHeader + "\n"), NullWritable.get());
-//
-//		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + keywords.getMaxNKeyValues(10)), NullWritable.get());
-//
-//		context.write(new Text("Song Name: \"Mr. Popular\"\tSong Duration: " + duration.toAvgString() + "\tFade In Duration: " + fadeIn.toAvgString() + "\tKey: "
-//				+ keys.getMaxKeyValue() + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + modes.getMaxKeyValue()
-//				+ "\tFade Out Duration: " + fadeOut.toAvgString() + "\tTempo: " + tempo.toAvgString()
-//				+ "\tTime Signature: " + timeSigs.getMaxKeyValue()), NullWritable.get());
 	}
 
 

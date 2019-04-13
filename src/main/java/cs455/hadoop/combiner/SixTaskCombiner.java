@@ -2,6 +2,7 @@ package cs455.hadoop.combiner;
 
 import cs455.hadoop.util.AvgDouble;
 import cs455.hadoop.util.Util;
+import cs455.hadoop.util.pair.TwoPairStringInt;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -13,15 +14,18 @@ public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		switch (key.charAt(0)) {
 			case 'A':
-				String artist = "";
-				int sum = 0;
+				TwoPairStringInt artistSum = null;
+//				String artist = "";
+//				int sum = 0;
 				for (Text val : values) {
-					String entry = val.toString();
-					String[] arr = entry.split("\t");
-					artist = arr[0];
-					sum += Integer.parseInt(arr[1]);
+//					String entry = val.toString();
+//					String[] arr = entry.split("\t");
+//					artist = arr[0];
+//					sum += Integer.parseInt(arr[1]);
+					if(artistSum == null) artistSum = new TwoPairStringInt(val);
+					else artistSum.add(Integer.parseInt(val.toString().split("\t")[1]));
 				}
-				context.write(new Text(key), new Text("N" + artist + "\t" + sum));
+				if(artistSum != null) context.write(new Text(key), new Text("N" + artistSum.getStr() + "\t" + artistSum.getVal()));
 				break;
 			case 'B':
 				for (Text val : values) {  //placeholder
@@ -92,13 +96,6 @@ public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 		for(Text val : values) {
 			String entry = val.toString();
 			if(entry.charAt(0) == 'N') {
-//				for(String s : entry.substring(1).split(",")) {
-//					String[] keyVal = s.split(" ");
-//					if(keyVal[0].isEmpty()) continue;
-//					Integer result = keywords.get(keyVal[0]);
-//					if(result == null) result = 0;
-//					keywords.put(keyVal[0], 1 + result);
-//				}
 				context.write(new Text(key), new Text(entry));
 			}
 			else {
