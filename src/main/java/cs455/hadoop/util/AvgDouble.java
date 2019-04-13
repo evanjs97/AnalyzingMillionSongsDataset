@@ -39,8 +39,9 @@ public class AvgDouble implements Writable{
 
 	public String toAvgString() {
 		if(count == 0) count = 1;
-		return ""+(getSum() / count);
+		return String.format("%.2f",(getSum() / count));
 	}
+
 
 	public String preserveCountString() { return getSum() + " " + count; }
 

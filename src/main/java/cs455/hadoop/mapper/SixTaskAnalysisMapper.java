@@ -58,7 +58,7 @@ public class SixTaskAnalysisMapper extends Mapper<LongWritable, Text, Text, Text
 				//output order duration, fade_in, key, loudness, mode, fade_out, tempo, time_signature
 				if(!line.get(2).isEmpty() && Double.parseDouble(line.get(2)) > .9)
 					context.write(new Text("H"), new Text("M"+line.get(5)+"\t"+line.get(6)+"\t"
-						+line.get(8)+"\t"+line.get(10)+"\t"+line.get(11)+"\t"+line.get(13)+"\t"+line.get(14)+"\t"+line.get(15)));
+						+line.get(8)+" 1\t"+line.get(10)+"\t"+line.get(11)+" 1\t"+line.get(13)+"\t"+line.get(14)+"\t"+line.get(15) + " 1"));
 
 			}
 		}

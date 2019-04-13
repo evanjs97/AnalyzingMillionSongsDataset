@@ -45,13 +45,18 @@ public class Util {
 		return twoD;
 	}
 
-	public static String formatList(LinkedList<String> values) {
+	public static String formatList(HashMap<String, Integer> values) {
 		StringBuilder builder = new StringBuilder();
-		for(String val : values) {
-			builder.append(val);
+		Iterator<Map.Entry<String, Integer>> iter = values.entrySet().iterator();
+		while(iter.hasNext()) {
+			Map.Entry<String, Integer> pair = iter.next();
+			if(pair.getKey().isEmpty()) continue;
+			builder.append(pair.getKey());
 			builder.append(" ");
+			builder.append(pair.getValue());
+			if(iter.hasNext()) builder.append(",");
 		}
-		return builder.toString().trim();
+		return builder.toString();
 	}
 
 	public static double DoubleOrZero(String val) {

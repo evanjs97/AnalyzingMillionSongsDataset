@@ -54,7 +54,14 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 					context.write(new Text("C" + line.get(8)), new Text("N"+song));
 					context.write(new Text("E" + line.get(8)), new Text("N"+song));
 					context.write(new Text("F" + line.get(8)), new Text("N"+song));
-					context.write(new Text("H"), new Text("N"+line.get(11).trim()));
+					String[] keywords = line.get(11).trim().split(" ");
+					StringBuilder builder = new StringBuilder();
+					for(int i = 0; i < keywords.length; i++) {
+						builder.append(keywords[i]);
+						builder.append(" 1");
+						if(i < keywords.length -1)builder.append(",");
+					}
+					if(keywords.length > 0)context.write(new Text("H"), new Text("N"+builder.toString()));
 				}
 
 			}

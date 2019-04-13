@@ -2,6 +2,7 @@ package cs455.hadoop.reducer;
 
 import cs455.hadoop.util.AvgDouble;
 import cs455.hadoop.util.MapKey;
+import cs455.hadoop.util.TreeFormatter;
 import cs455.hadoop.util.Util;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.NullWritable;
@@ -304,76 +305,88 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		if(!name.equals("") && value != 0) maxes.put(new MapKey(key, value, increasing), name);
 	}
 
+	/**
+	 *
+	 * Input Order in values = duration, fade_in, key, loudness, mode, fade_out, tempo, time_signature
+	 * @param values
+	 * @param context
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private void hotnessTask(Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		AvgDouble duration = new AvgDouble();
 		AvgDouble loudness = new AvgDouble();
 		AvgDouble tempo = new AvgDouble();
 		AvgDouble fadeIn = new AvgDouble();
 		AvgDouble fadeOut = new AvgDouble();
-		LinkedList<String> keys = new LinkedList<>();
-		LinkedList<String> modes = new LinkedList<>();
-		LinkedList<String> timeSigs = new LinkedList<>();
 
-		LinkedList<String> keywords = new LinkedList<>();
+		TreeFormatter keywords = new TreeFormatter();
+		TreeFormatter keys = new TreeFormatter();
+		TreeFormatter modes = new TreeFormatter();
+		TreeFormatter timeSigs = new TreeFormatter();
+
 		for(Text val : values) {
 			String entry = val.toString();
 			if (entry.charAt(0) == 'N') {
-				keywords.addAll(Arrays.asList(entry.substring(1).split(" ")));
+				keywords.addAll(Arrays.asList(entry.substring(1).split(",")), " ");
 			} else {
-				String[] arr = entry.substring(1).split("\t");
-				String[] durArr = arr[0].split(" ");
-				double temp = Util.DoubleOrZero(durArr[0]);
+				String[] arr = entry.substring(1).split("\t", -1);
+				String[] tempArr = arr[0].split(" ");
+				double temp = Util.DoubleOrZero(tempArr[0]);
 				if (temp != 0) {
-					if (durArr.length == 2) {
-						duration.add(temp, Integer.parseInt(durArr[1]));
+					if (tempArr.length == 2) {
+						duration.add(temp, Integer.parseInt(tempArr[1]));
 					} else duration.add(temp);
 				}
 
-				String[] inArr = arr[1].split(" ");
-				temp = Util.DoubleOrZero(inArr[0]);
+				tempArr = arr[1].split(" ");
+				temp = Util.DoubleOrZero(tempArr[0]);
 				if (temp != 0) {
-					if (inArr.length == 2) {
-						fadeIn.add(temp, Integer.parseInt(durArr[1]));
+					if (tempArr.length == 2) {
+						fadeIn.add(temp, Integer.parseInt(tempArr[1]));
 					} else fadeIn.add(temp);
 				}
 
-				String[] loudArr = arr[3].split(" ");
-				temp = Util.DoubleOrZero(arr[3]);
+				tempArr = arr[3].split(" ");
+				temp = Util.DoubleOrZero(tempArr[0]);
 				if (temp != 0) {
-					if (loudArr.length == 2) {
-						loudness.add(temp, Integer.parseInt(loudArr[1]));
+					if (tempArr.length == 2) {
+						loudness.add(temp, Integer.parseInt(tempArr[1]));
 					} else loudness.add(temp);
 				}
 
-				String[] outArr = arr[5].split(" ");
-				temp = Util.DoubleOrZero(arr[5]);
+				tempArr = arr[5].split(" ");
+				temp = Util.DoubleOrZero(tempArr[0]);
 				if (temp != 0) {
-					if (outArr.length == 2) {
-						loudness.add(temp, Integer.parseInt(outArr[1]));
-					} else loudness.add(temp);
+					if (tempArr.length == 2) {
+						fadeOut.add(temp, Integer.parseInt(tempArr[1]));
+					} else fadeOut.add(temp);
 				}
 
-				String[] tempoArr = arr[6].split(" ");
-				temp = Util.DoubleOrZero(arr[6]);
+				tempArr = arr[6].split(" ");
+				temp = Util.DoubleOrZero(tempArr[0]);
 				if (temp != 0) {
-					if (tempoArr.length == 2) {
-						tempo.add(temp, Integer.parseInt(tempoArr[1]));
+					if (tempArr.length == 2) {
+						tempo.add(temp, Integer.parseInt(tempArr[1]));
 					} else tempo.add(temp);
 				}
 
 
-				keys.addAll(Arrays.asList(arr[2].split(" ")));
-				modes.addAll(Arrays.asList(arr[4].split(" ")));
-				timeSigs.addAll(Arrays.asList(arr[7].split(" ")));
+				keys.addAll(Arrays.asList(arr[2].split(","))," ");
+				modes.addAll(Arrays.asList(arr[4].split(","))," ");
+				timeSigs.addAll(Arrays.asList(arr[7].split(","))," ");
 			}
 		}
 		context.write(new Text("\n" + outputHeader + "\n"), NullWritable.get());
 
-		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + Util.mostCommonStringInList(keywords,10)), NullWritable.get());
+		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + keywords.getMaxNKeyValues(10)), NullWritable.get());
+//		String songStuff = String.format("Song Name: \"Mr. Popular\"\tSong Duration: %.2f seconds\"\\tFade In Duration: %.2f seconds" +
+//						"\tKey: ",
+//				duration.toAvgString(),fadeIn.toAvgString());
 		context.write(new Text("Song Name: \"Mr. Popular\"\tSong Duration: " + duration.toAvgString() + "\tFade In Duration: " + fadeIn.toAvgString() + "\tKey: "
-				+ Util.mostCommonStringInList(keys) + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + Util.mostCommonStringInList(modes)
+				+ keys.getMaxKeyValue() + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + modes.getMaxKeyValue()
 				+ "\tFade Out Duration: " + fadeOut.toAvgString() + "\tTempo: " + tempo.toAvgString()
-				+ "\tTime Signature: " + Util.mostCommonStringInList(timeSigs)), NullWritable.get());
+				+ "\tTime Signature: " + timeSigs.getMaxKeyValue()), NullWritable.get());
 
 	}
 }
