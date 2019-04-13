@@ -160,6 +160,16 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 
 	}
 
+	private void cleanupHotnessTask(Context context) throws IOException, InterruptedException {
+		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + keywords.getMaxNKeyValues(10)), NullWritable.get());
+
+		context.write(new Text("Song Name: Mr. Popular\tSong Duration: " + duration.toAvgString()
+				+ " seconds   Fade In Duration: " + fadeIn.toAvgString() + " seconds   Key: "
+				+ keys.getMaxKeyValue() + "   Loudness: " + loudness.toAvgString() + " decibals   Mode: " + modes.getMaxKeyValue()
+				+ "   Fade Out Duration: " + fadeOut.toAvgString() + " seconds   Tempo: " + tempo.toAvgString()
+				+ "   Time Signature: " + timeSigs.getMaxKeyValue()), NullWritable.get());
+	}
+
 	/**
 	 * output data using output type of current reducer instance
 	 * @param context what to write to
@@ -167,9 +177,9 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	 * @throws InterruptedException if context write issues
 	 */
 	protected void cleanup(Context context) throws IOException, InterruptedException {
-		if(outputType == 'H') return;
-		context.write(new Text(outputHeader), NullWritable.get());
-		if(outputType == 'E' && !maxes.isEmpty()) outputLengths(context);
+		context.write(new Text("\n"+outputHeader+"\n"), NullWritable.get());
+		if(outputType == 'H') cleanupHotnessTask(context);
+		else if(outputType == 'E' && !maxes.isEmpty()) outputLengths(context);
 		else if(outputType == 'G' && !maxes.isEmpty()) context.write(new Text(getOutputValue()), NullWritable.get());
 		else {
 			for (int i = 0; i < Math.min(10, maxes.size()); i++) {
@@ -305,6 +315,17 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 		if(!name.equals("") && value != 0) maxes.put(new MapKey(key, value, increasing), name);
 	}
 
+	AvgDouble duration = new AvgDouble();
+	AvgDouble loudness = new AvgDouble();
+	AvgDouble tempo = new AvgDouble();
+	AvgDouble fadeIn = new AvgDouble();
+	AvgDouble fadeOut = new AvgDouble();
+
+	TreeFormatter keywords = new TreeFormatter();
+	TreeFormatter keys = new TreeFormatter();
+	TreeFormatter modes = new TreeFormatter();
+	TreeFormatter timeSigs = new TreeFormatter();
+
 	/**
 	 *
 	 * Input Order in values = duration, fade_in, key, loudness, mode, fade_out, tempo, time_signature
@@ -314,79 +335,37 @@ public class SixTaskReducer extends Reducer<Text, Text, Text, NullWritable> {
 	 * @throws InterruptedException
 	 */
 	private void hotnessTask(Iterable<Text> values, Context context) throws IOException, InterruptedException {
-		AvgDouble duration = new AvgDouble();
-		AvgDouble loudness = new AvgDouble();
-		AvgDouble tempo = new AvgDouble();
-		AvgDouble fadeIn = new AvgDouble();
-		AvgDouble fadeOut = new AvgDouble();
-
-		TreeFormatter keywords = new TreeFormatter();
-		TreeFormatter keys = new TreeFormatter();
-		TreeFormatter modes = new TreeFormatter();
-		TreeFormatter timeSigs = new TreeFormatter();
-
+		List<String> tempKeywords = null;
+		boolean hotArtist = false;
 		for(Text val : values) {
 			String entry = val.toString();
 			if (entry.charAt(0) == 'N') {
-				keywords.addAll(Arrays.asList(entry.substring(1).split(",")), " ");
+				tempKeywords = Arrays.asList(entry.substring(1).split(","));
 			} else {
 				String[] arr = entry.substring(1).split("\t", -1);
-				String[] tempArr = arr[0].split(" ");
-				double temp = Util.DoubleOrZero(tempArr[0]);
-				if (temp != 0) {
-					if (tempArr.length == 2) {
-						duration.add(temp, Integer.parseInt(tempArr[1]));
-					} else duration.add(temp);
-				}
 
-				tempArr = arr[1].split(" ");
-				temp = Util.DoubleOrZero(tempArr[0]);
-				if (temp != 0) {
-					if (tempArr.length == 2) {
-						fadeIn.add(temp, Integer.parseInt(tempArr[1]));
-					} else fadeIn.add(temp);
-				}
-
-				tempArr = arr[3].split(" ");
-				temp = Util.DoubleOrZero(tempArr[0]);
-				if (temp != 0) {
-					if (tempArr.length == 2) {
-						loudness.add(temp, Integer.parseInt(tempArr[1]));
-					} else loudness.add(temp);
-				}
-
-				tempArr = arr[5].split(" ");
-				temp = Util.DoubleOrZero(tempArr[0]);
-				if (temp != 0) {
-					if (tempArr.length == 2) {
-						fadeOut.add(temp, Integer.parseInt(tempArr[1]));
-					} else fadeOut.add(temp);
-				}
-
-				tempArr = arr[6].split(" ");
-				temp = Util.DoubleOrZero(tempArr[0]);
-				if (temp != 0) {
-					if (tempArr.length == 2) {
-						tempo.add(temp, Integer.parseInt(tempArr[1]));
-					} else tempo.add(temp);
-				}
-
+				duration.addFromPairArray(arr[0].split(" "));
+				fadeIn.addFromPairArray(arr[1].split(" "));
+				loudness.addFromPairArray(arr[3].split(" "));
+				fadeOut.addFromPairArray(arr[5].split(" "));
+				tempo.addFromPairArray(arr[6].split(" "));
 
 				keys.addAll(Arrays.asList(arr[2].split(","))," ");
 				modes.addAll(Arrays.asList(arr[4].split(","))," ");
 				timeSigs.addAll(Arrays.asList(arr[7].split(","))," ");
+				hotArtist = true;
 			}
 		}
-		context.write(new Text("\n" + outputHeader + "\n"), NullWritable.get());
-
-		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + keywords.getMaxNKeyValues(10)), NullWritable.get());
-//		String songStuff = String.format("Song Name: \"Mr. Popular\"\tSong Duration: %.2f seconds\"\\tFade In Duration: %.2f seconds" +
-//						"\tKey: ",
-//				duration.toAvgString(),fadeIn.toAvgString());
-		context.write(new Text("Song Name: \"Mr. Popular\"\tSong Duration: " + duration.toAvgString() + "\tFade In Duration: " + fadeIn.toAvgString() + "\tKey: "
-				+ keys.getMaxKeyValue() + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + modes.getMaxKeyValue()
-				+ "\tFade Out Duration: " + fadeOut.toAvgString() + "\tTempo: " + tempo.toAvgString()
-				+ "\tTime Signature: " + timeSigs.getMaxKeyValue()), NullWritable.get());
-
+		if(hotArtist && tempKeywords != null) keywords.addAll(tempKeywords," ");
+//		context.write(new Text("\n" + outputHeader + "\n"), NullWritable.get());
+//
+//		context.write(new Text("Artist Name: The Hippogriffs,\tKeyWords: " + keywords.getMaxNKeyValues(10)), NullWritable.get());
+//
+//		context.write(new Text("Song Name: \"Mr. Popular\"\tSong Duration: " + duration.toAvgString() + "\tFade In Duration: " + fadeIn.toAvgString() + "\tKey: "
+//				+ keys.getMaxKeyValue() + "\tLoudness: " + loudness.toAvgString() + "\tMode: " + modes.getMaxKeyValue()
+//				+ "\tFade Out Duration: " + fadeOut.toAvgString() + "\tTempo: " + tempo.toAvgString()
+//				+ "\tTime Signature: " + timeSigs.getMaxKeyValue()), NullWritable.get());
 	}
+
+
 }

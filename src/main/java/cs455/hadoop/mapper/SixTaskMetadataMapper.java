@@ -61,7 +61,7 @@ public class SixTaskMetadataMapper extends Mapper<LongWritable, Text, Text, Text
 						builder.append(" 1");
 						if(i < keywords.length -1)builder.append(",");
 					}
-					if(keywords.length > 0)context.write(new Text("H"), new Text("N"+builder.toString()));
+					if(keywords.length > 0)context.write(new Text("H"+line.get(8)), new Text("N"+builder.toString()));
 				}
 
 			}

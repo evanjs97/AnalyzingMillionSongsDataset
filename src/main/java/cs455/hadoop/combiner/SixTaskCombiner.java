@@ -68,7 +68,8 @@ public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 
 
 	/**
-	 *
+	 * Method to handle input and final output for task 9/hotness task
+	 * Hotness Task:
 	 * Input Order in values = duration, fade_in, key, loudness, mode, fade_out, tempo, time_signature
 	 * @param values
 	 * @param context
@@ -87,70 +88,31 @@ public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 		HashMap<String, Integer> modes = new HashMap<>();
 		HashMap<String, Integer> timeSigs = new HashMap<>();
 		HashMap<String, Integer> keywords = new HashMap<>();
-//		LinkedList<String> keys = new LinkedList<>();
-//		LinkedList<String> modes = new LinkedList<>();
-//		LinkedList<String> timeSigs = new LinkedList<>();
 
 		for(Text val : values) {
 			String entry = val.toString();
 			if(entry.charAt(0) == 'N') {
-				for(String s : entry.substring(1).split(",")) {
-					String[] keyVal = s.split(" ");
-					if(keyVal[0].isEmpty()) continue;
-					Integer result = keywords.get(keyVal[0]);
-					if(result == null) result = 0;
-					keywords.put(keyVal[0], 1 + result);
-				}
+//				for(String s : entry.substring(1).split(",")) {
+//					String[] keyVal = s.split(" ");
+//					if(keyVal[0].isEmpty()) continue;
+//					Integer result = keywords.get(keyVal[0]);
+//					if(result == null) result = 0;
+//					keywords.put(keyVal[0], 1 + result);
+//				}
+				context.write(new Text(key), new Text(entry));
 			}
 			else {
 				String[] arr = entry.substring(1).split("\t", -1);
-				double temp = Util.DoubleOrZero(arr[0]);
-				if(temp != 0) {
-					duration.add(temp);
-				}
-				temp = Util.DoubleOrZero(arr[1]);
-				if(temp != 0) {
-					fadeIn.add(temp);
-				}
-				temp = Util.DoubleOrZero(arr[3]);
-				if(temp != 0) {
-					loudness.add(temp);
-				}
-				temp = Util.DoubleOrZero(arr[5]);
-				if(temp != 0) {
-					fadeOut.add(temp);
-				}
-				temp = Util.DoubleOrZero(arr[6]);
-				if(temp != 0) {
-					tempo.add(temp);
-				}
 
-				if(!arr[2].isEmpty()) {
-					String[] keyVal = arr[2].split(" ");
-					if(!keyVal[0].isEmpty()) {
-						Integer result = keys.get(keyVal[0]);
-						if (result == null) result = 0;
-						keys.put(keyVal[0], result + 1);
-					}
-				}
-				if(!arr[4].isEmpty()) {
-					String[] keyVal = arr[4].split(" ");
-					if(!keyVal[0].isEmpty()) {
-						Integer result = modes.get(keyVal[0]);
-						if (result == null) result = 0;
-						modes.put(keyVal[0], result + 1);
-					}
-				}
-				if(!arr[7].isEmpty()) {
-					String[] keyVal = arr[7].split(" ");
-					if(!keyVal[0].isEmpty()) {
-						Integer result = timeSigs.get(keyVal[0]);
-						if (result == null) result = 0;
-						timeSigs.put(keyVal[0], result + 1);
-					}
-				}
+				duration.addStringIfNotZero(arr[0]);
+				fadeIn.addStringIfNotZero(arr[1]);
+				loudness.addStringIfNotZero(arr[3]);
+				fadeOut.addStringIfNotZero(arr[5]);
+				tempo.addStringIfNotZero(arr[6]);
 
-
+				Util.addStringPairToHashMap(arr[2], keys);
+				Util.addStringPairToHashMap(arr[4], modes);
+				Util.addStringPairToHashMap(arr[7], timeSigs);
 			}
 		}
 		String keywordOut = Util.formatList(keywords);
@@ -161,16 +123,4 @@ public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 				+ "\t" + Util.formatList(modes) + "\t" + fadeOut.preserveCountString() + "\t" + tempo + "\t" + Util.formatList(timeSigs)));
 
 	}
-
-//	private String (HashMap<String, Integer> keywords) {
-//		StringBuilder keyWordBuilder = new StringBuilder();
-//		Iterator<Map.Entry<String, Integer>> keywordIter = keywords.entrySet().iterator();
-//		while(keywordIter.hasNext()) {
-//			Map.Entry<String, Integer> pair = keywordIter.next();
-//			keyWordBuilder.append(pair.getKey());
-//			keyWordBuilder.append(" ");
-//			keyWordBuilder.append(pair.getValue());
-//			if(keywordIter.hasNext()) keyWordBuilder.append(",");
-//		}
-//	}
 }

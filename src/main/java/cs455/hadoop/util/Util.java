@@ -2,6 +2,7 @@ package cs455.hadoop.util;
 
 import cs455.hadoop.reducer.SixTaskReducer;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.util.hash.Hash;
 
 import java.util.*;
 
@@ -95,6 +96,16 @@ public class Util {
 			if(i < count-1) output.append(", ");
 		}
 		return output.toString();
+	}
+
+	public static void addStringPairToHashMap(String pair, HashMap<String, Integer> map) {
+		if(!pair.isEmpty()) {
+			String[] keyVal = pair.split(" ");
+			if(!keyVal[0].isEmpty()) {
+				Integer result = map.getOrDefault(keyVal[0], 0);
+				map.put(keyVal[0], result + 1);
+			}
+		}
 	}
 
 }

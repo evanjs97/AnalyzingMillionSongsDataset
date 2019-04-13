@@ -51,10 +51,4 @@ public class TreeFormatter {
 		return builder.toString();
 	}
 
-//	public String getFormattedMax() {
-//		Map.Entry<MapKey, String> max = getMax();
-//		return max.getValue() + " " + max.getKey().getValue();
-//	}
-
-//	public
 }

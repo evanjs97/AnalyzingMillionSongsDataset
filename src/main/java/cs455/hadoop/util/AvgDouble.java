@@ -2,19 +2,36 @@ package cs455.hadoop.util;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Writable;
+import sun.awt.IconInfo;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+/**
+ * Average Double Class implements Writable so that It can be used as output type in mapper, reducer if needed
+ * Average Double keeps track of a DoubleWritable and a count so that the average can be calculate when needed
+ */
 public class AvgDouble implements Writable{
 	private DoubleWritable sum;
 	private int count;
 
+	/**
+	 * Default constructor sets sum and count to 0
+	 */
 	public AvgDouble() { this(0,0); }
 
+	/**
+	 * Constructor: sets sum to desired sum and count to 1
+	 * @param sum desired initial sum of double
+	 */
 	public AvgDouble(double sum) { this(sum, 1); }
 
+	/**
+	 * constructor to set both count and sum when known
+	 * @param sum desired initial sum
+	 * @param count desired initial count
+	 */
 	public AvgDouble(double sum, int count) {
 		this.sum = new DoubleWritable(sum);
 		this.count = count;
@@ -65,6 +82,22 @@ public class AvgDouble implements Writable{
 			if(i < arr.length-1) output += " ";
 		}
 		return output;
+	}
+
+	public void addFromPairArray(String[] pair) {
+		double temp = Util.DoubleOrZero(pair[0]);
+		if (temp != 0) {
+			if (pair.length == 2) {
+				add(temp, Integer.parseInt(pair[1]));
+			} else add(temp);
+		}
+	}
+
+	public void addStringIfNotZero(String num) {
+		double temp = Util.DoubleOrZero(num);
+		if(temp != 0) {
+			add(temp);
+		}
 	}
 
 	public static String arr1DToString(AvgDouble[] arr) {
