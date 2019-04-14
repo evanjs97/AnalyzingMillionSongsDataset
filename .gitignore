@@ -1,6 +1,10 @@
 .gradle
 /build/
 
+project/
+
+target/*
+
 META-INF/
 .idea*
 out/

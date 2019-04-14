@@ -1,0 +1,7 @@
+,song_id,duration,end_of_fade_in,energy,key,key_confidence,loudness,mode,tempo,time_signature,start_of_fade_out
+,Song1,54,2,1,2,1,5,2,3,1,23
+,Song2,32,2,1,2,1,5,2,3,1,23
+,Song3,30,2,1,2,1,5,2,3,1,21
+,Song4,12,2,1,2,1,5,2,3,1,13
+,Song5,90,2,1,2,1,5,2,3,1,12
+,Song6,243.2,2,1,2,1,5,2,3,1,5

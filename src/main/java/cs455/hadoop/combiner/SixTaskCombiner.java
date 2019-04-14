@@ -9,7 +9,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.*;
-
 public class SixTaskCombiner extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		switch (key.charAt(0)) {

@@ -1,5 +1,4 @@
 package cs455.hadoop.mapper;
-
 import cs455.hadoop.util.Util;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
