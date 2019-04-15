@@ -6,21 +6,21 @@ import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 
 class Classifier(data: DataFrame) {
 
-  def classify(alg : String, classes : Int, features : Int): Unit = {
-    classify(alg, .6, .4, classes, features)
+  def classify(alg : String, output : String, classes : Int, features : Int): Unit = {
+    classify(alg, output, .6, .4, classes, features)
   }
 
-  def classify(alg : String, trainSplit : Double, testSplit : Double, classes : Int, features : Int): Unit = {
+  def classify(alg : String, output : String, trainSplit : Double, testSplit : Double, classes : Int, features : Int): Unit = {
     val splits = data.randomSplit(Array(trainSplit,testSplit))
     val train = splits(0)
     val test = splits(1)
     test.show(false)
     train.show(false)
     val layers = Array(features, classes + 3, classes + 2, classes)
-    multilayer(layers, train, test)
+    multilayer(layers, train, test, output)
   }
 
-  def multilayer(layers : Array[Int], train : Dataset[Row], test : Dataset[Row]): Unit = {
+  def multilayer(layers : Array[Int], train : Dataset[Row], test : Dataset[Row], output : String): Unit = {
     val modelTrainer = new MultilayerPerceptronClassifier()
       .setLayers(layers)
       .setBlockSize(128)
@@ -34,6 +34,7 @@ class Classifier(data: DataFrame) {
     val prediction = result.select("prediction", "label")
     val evaluate = new MulticlassClassificationEvaluator()
         .setMetricName("accuracy")
+    evaluate.save(output)
 
     print("Multilayer Perceptron Classifier achieved an accuracy of: " + evaluate.evaluate(prediction))
   }

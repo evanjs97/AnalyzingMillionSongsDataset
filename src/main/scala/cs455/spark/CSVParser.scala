@@ -6,7 +6,7 @@ import org.apache.spark.ml.feature.StringIndexer
 
 class CSVParser(sc: SparkSession) {
 
-  def parseCSV(songPath: String, artistPath: String, libSVMPath: String): Int = {
+  def csvToLibSVM(songPath: String, artistPath: String, libSVMPath: String, minCount : Int): Int = {
     var songInput = sc.read.format("csv").option("header", "true").load(songPath+"*.csv")
     var artistInput = sc.read.format("csv").option("header", "true").load(artistPath+"*.csv")
 
@@ -25,25 +25,28 @@ class CSVParser(sc: SparkSession) {
           "strToNull("+songColumns(6)+")", "strToNull("+songColumns(7)+")", "strToNull("+songColumns(8)+")").na.drop()
     songInput = songInput.toDF(songColumns: _*)
 
-    artistInput = artistInput.selectExpr("artist_id", "strToNull(artist_name)", "strToNull(song_id)").na.drop().orderBy(asc("artist_id"))
+    artistInput = artistInput.selectExpr("strToNull(artist_id)", "strToNull(artist_name)", "strToNull(song_id)").na.drop().orderBy(asc("artist_id"))
     artistInput = artistInput.toDF(artistColumns: _*)
+
+    val filteredArtists = artistInput.groupBy("artist_id").agg(count("artist_id")).where("count(artist_id) > " + minCount)
 
     val index = new StringIndexer()
       .setInputCol("artist_id")
       .setOutputCol("artist_index")
 
+    artistInput = artistInput.join(filteredArtists, Seq("artist_id"), "inner")
+
     artistInput = index.fit(artistInput).transform(artistInput)
     artistInput.show(false)
 
-    val joinedInput = songInput.join(artistInput, "song_id")
+    val joinedInput = songInput.join(artistInput, Seq("song_id"), "inner")
     joinedInput.show()
 
     val classes = joinedInput.agg(countDistinct("artist_index")).first().get(0).toString.toInt
 
-   // joinedInput = joinedInput.orderBy(asc("artist_id")).repartition(1).
     val file = joinedInput.rdd.map(row => {
       val builder = new StringBuilder
-      builder.append(row.get(11)).append(" ")
+      builder.append(row.get(12)).append(" ")
       builder.append("1:").append(row.get(1)).append(" ")
       builder.append("2:").append(row.get(2)).append(" ")
       builder.append("3:").append(row.get(3)).append(" ")
@@ -54,7 +57,6 @@ class CSVParser(sc: SparkSession) {
       builder.append("8:").append(row.get(8)).append(" ")
       builder.toString()
     }).repartition(1).saveAsTextFile(libSVMPath)
-//    return classes.toInt
     return classes
   }
 }
