@@ -18,6 +18,9 @@ dependencies {
     compile (group: 'org.apache.spark', name: 'spark-sql_2.11', version: '2.2.1') {
         exclude group: 'com.fasterxml.jackson.core'
     }
+    compile (group: 'org.apache.spark', name: 'spark-mllib_2.11', version: '2.2.1') {
+        exclude group: 'com.fasterxml.jackson.core'
+    }
 
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.6'
     compile group: 'org.apache.hadoop', name: 'hadoop-common', version: '3.1.2'

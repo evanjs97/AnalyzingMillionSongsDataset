@@ -2,7 +2,6 @@ package cs455.hadoop.util;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Writable;
-import sun.awt.IconInfo;
 
 import java.io.DataInput;
 import java.io.DataOutput;
