@@ -52,7 +52,7 @@ class Classifier(data: DataFrame) {
     val fs = FileSystem.get(conf)
     val outStream = fs.create(new Path(output))
     val streamWriter = new PrintWriter(outStream)
-    for(i <- 0 to types.length)
+    for(i <- types.indices)
     {
       streamWriter.write(types(i) + results(i))
     }

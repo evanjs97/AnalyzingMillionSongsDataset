@@ -36,9 +36,9 @@ object Main {
       val sc = if(args(0) == "-hdfs") SparkSession.builder.appName("Test").master("spark://lansing:25432").getOrCreate()
       else SparkSession.builder.appName("Test").master("local").getOrCreate()
       val data = sc.read.format("libsvm").load(input+"/part-*")
-      data.show(false)
+//      data.show(false)
       val classes = data.agg(countDistinct("label")).first().get(0).toString.toInt
-      data.show(false)
+//      data.show(false)
       val classifier = new Classifier(data)
       classifier.classify("test", output, classes, 8, toHDFS)
       sc.close()
