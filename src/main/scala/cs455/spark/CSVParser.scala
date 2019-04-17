@@ -40,7 +40,7 @@ class CSVParser(sc: SparkSession) {
     joinedInput = joinedInput.join(filteredArtists, Seq("artist_id"), "inner")
 
     joinedInput = index.fit(joinedInput).transform(joinedInput)
-    joinedInput.show()
+//    joinedInput.show()
 
     val file = joinedInput.rdd.map(row => {
       val builder = new StringBuilder

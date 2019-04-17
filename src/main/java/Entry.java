@@ -20,7 +20,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-public class Main {
+public class Entry {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException{
 		if(args.length < 3) {
@@ -28,21 +28,23 @@ public class Main {
 			System.exit(1);
 		}
 
-		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "Task");
+
 
 		switch(args[0]) {
 			case "-1":
-				createJobOne(job, args[1], args[2], args[3]);
+				createJobOne(args[1], args[2], args[3]);
 				break;
 			case "-7":
-				createJobSeven(job, args[1], args[2]);
+				createJobSeven(args[1], args[2]);
 				break;
 		}
 	}
 
-	public static void createJobSeven(Job job, String analysis, String output) throws IOException, ClassNotFoundException, InterruptedException{
-		job.setJarByClass(Main.class);
+	public static void createJobSeven(String analysis, String output) throws IOException, ClassNotFoundException, InterruptedException{
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "Task 7");
+
+		job.setJarByClass(Entry.class);
 		job.setCombinerClass(TaskSevenCombiner.class);
 		job.setReducerClass(TaskSevenReducer.class);
 		job.setMapperClass(TaskSevenMapper.class);
@@ -63,9 +65,11 @@ public class Main {
 	}
 
 
-	public static void createJobOne(Job job, String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
+	public static void createJobOne(String analysis, String metadata, String output) throws IOException, ClassNotFoundException, InterruptedException{
 //		deleteFolder(new Path(output));
-		job.setJarByClass(Main.class);
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "Task 1-6 and 8-9");
+		job.setJarByClass(Entry.class);
 		job.setCombinerClass(SixTaskCombiner.class);
 		job.setPartitionerClass(SixTaskPartitioner.class);
 		job.setReducerClass(SixTaskReducer.class);
